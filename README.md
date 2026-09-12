@@ -27,10 +27,9 @@ reading further:
 
 | Item | Why |
 |---|---|
-| **Filament Sensor → OFF** | Otherwise the printer grabs and autoloads the filament while you are inserting it by hand. |
-| **Remove the PTFE tube from this tool** | The pulled plug travels 80 mm up and out of the top port. With the tube fitted there is nowhere for it to go. |
-| **Light-coloured PLA, and stay at the printer** | PLA shows the debris clearly. Do **not** load it beforehand — a prompt on the printer's screen says when to insert it. The procedure waits for knob presses at six points, and the heaters switch off after ~30 minutes unattended. |
-| **This nozzle's filament type gets set to FLEX — note what it is now** | Firmware 6.9.0 removed the Auto Retract switch on INDX, and FLEX is the only remaining way to suppress it; see [Auto retract](#auto-retract) below. This is a *persistent* change to the printer's settings that you have to put back. USB Serial reads the current type and restores that exact value for you, except for names it cannot send back over G-code, where it writes nothing and tells you what to set by hand. The downloaded file cannot read anything, so **write down what Settings → Filament shows for this nozzle before you start.** |
+| **Selected cleaning filament, and stay at the printer** | PLA is the preferred, field-tested material. The Nylon/PA option is experimental: use dry, pure/unfilled PA and follow the spool manufacturer's temperature limits. Do **not** load it beforehand — a prompt on the printer's screen says when to insert it. |
+| **Remove the PTFE tube from this tool** | The pulled plug travels 100 mm up and out of the top port. With the tube fitted there is nowhere for it to go. |
+| **This nozzle's filament type gets set to FLEX temporarily** | Firmware 6.9.0 removed the Auto Retract switch on INDX, and FLEX is the only remaining way to suppress it; see [Auto retract](#auto-retract) below. USB Serial restores the selected cleaning preset at the end: `PLA` for PLA or firmware's `PA` preset for Nylon/PA. A downloaded file leaves FLEX in place through printer finalization; after it reports **Finished**, set the nozzle to the selected preset from the Filament menu or with the command shown in the reminder below. |
 
 Serial mode additionally needs **Settings → Hardware → Experimental Settings →
 "Serial Printing Screen" → OFF** (then reboot). See [the firmware bug](#firmware-bug)
@@ -38,16 +37,17 @@ below for why.
 
 ## The procedure
 
-Pick tool → mark FLEX → hot flush → pack while cooling → deep cool → 80 mm
-motorized pull → restore → warm dock. Prompts appear on the **printer's** screen and wait
-for a knob press, so your hands are at the machine where the work happens.
+Pick tool → mark FLEX → hot flush → pack while cooling → deep cool → 100 mm
+motorized pull → restore → warm dock. Prompts beep and appear on the **printer's**
+screen, waiting for a knob press, so your hands are at the machine where the work happens.
 
-The six knob-press points, in order: confirm the setup, **insert the PLA**
-(this is when the filament goes in, not before), **start the purge** — from
-here, watch the nozzle tip for melted PLA flowing out — confirm what came out,
-start the pull, and remove the pulled strand. Everything between the prompts,
-including the tool pick and the final warm dock, is automatic. The nozzle is
-rewarmed before docking so residue releases instead of dragging cold strings.
+The six knob-press points, in order: confirm the setup, **insert the selected cleaning
+filament** (this is when the filament goes in, not before), **start the purge** — from
+here, watch the nozzle tip for melted filament flowing out — confirm what came out,
+start the pull, and remove the pulled strand. Everything between the prompts, including
+the tool pick and the final warm dock, is automatic. A longer beep follows the deep-cool
+dwell. The nozzle is rewarmed before docking so residue releases instead of dragging
+cold strings.
 The closing brush wipe over the wastebin is end-of-print machinery, so **only
 the G-code-file route gets it**; a serial run warms the nozzle and docks
 without a wipe.
@@ -55,14 +55,31 @@ without a wipe.
 Success looks like **three thin strands with visible dark debris**. Repeat until
 the tip comes out clean, typically one to three cycles.
 
-**Then put the settings back.** Filament Sensor on, PTFE tube refitted, and the
-nozzle's filament type back off FLEX — to whatever it was before, not to PLA. The page shows this reminder once you
-download a file or finish a run, because the settings you turned off stay off: a
-printer left that way will not detect a runout, and a nozzle left marked FLEX
-will not auto-retract at the end of a print, which invites the next clog.
+**Then put the settings back.** Refit the PTFE tube and make sure the nozzle's
+filament type is no longer FLEX. USB Serial restores the selected cleaning preset
+at the end of a clean run. For a downloaded file, wait until the printer reports
+**Finished**, then use the command shown by the page or select the preset from the
+Filament menu. A nozzle left marked FLEX will not auto-retract at the end of a print.
 
 If nothing extrudes during the purge, the blockage is *above* the melt zone and
 a cold pull cannot reach it. Stop there.
+
+## Cleaning material profiles
+
+The default PLA profile is the preferred, field-tested path: flush at 290 °C and
+pull at 80 °C. The Nylon/PA profile is an experimental starting point: use dry,
+pure/unfilled PA, flush at 290 °C (or the spool's specified print temperature),
+and pull at 130 °C. The project uses these as deliberate starting values for this
+automated profile; [Prusa's INDX maintenance guide](https://help.prusa3d.com/article/regular-printer-maintenance-core-one-indx_1116911)
+documents a 100 °C manual pull, while its [PA guidance](https://help.prusa3d.com/article/polyamide-nylon_167188?product=mk4)
+lists 285 °C as a generic nozzle temperature. Prusa does not publish INDX-specific Nylon values
+for the packing, deep-cooling, or warm-docking stages. Those Nylon stages currently
+use provisional profile values of 180 °C, 60 °C plus a 120-second dwell, and 170 °C.
+Validate them on the exact PA grade and nozzle before relying on the automated path.
+
+Nylon is hygroscopic; dry it according to the manufacturer's instructions. Do not
+use carbon-fiber- or glass-filled PA as the first test. The selected Nylon preset is
+called `PA` in firmware, so restoration uses `M865 S"PA" L<n>`.
 
 <a name="auto-retract"></a>
 ## Auto retract
@@ -121,24 +138,17 @@ Side effects of the choice, all checked:
 **Putting it back is on you.** The write lands in the printer's persistent settings
 and a power cycle does not undo it.
 
-- **USB Serial** reads the nozzle's real filament type first (`M865 I<n>`) and
-  restores exactly that value — as the very last command of the run, after the warm
-  dock, so nothing in between can auto-retract — and in its cleanup path. The one
-  exception is a name it cannot quote back into `M865`, such as one containing a
-  space or punctuation. The firmware will store one: an NFC abbreviation that fails
-  its own name validation is kept anyway, with the dataset merely flagged unsafe.
-  Rather than overwrite it with a value nobody chose, the run writes **nothing**
-  back — the nozzle is left marked FLEX and the page hands you the exact name to
-  restore by hand. Watch for that message; a nozzle left FLEX will not auto-retract
-  at the end of your next print.
-- **The downloaded file does not**, on purpose. The end-of-print sequence runs
-  after the last line of the file; with the nozzle already back on PLA, that
-  sequence would auto-retract — reheating to 215 °C, overriding the 170 °C the file
-  sets for the warm wipe, and ramming the melt zone you just cleared. Once the
-  print has **finished**, send `M865 S"<TYPE>" L<n>` with the type you noted before
-  starting, or set it from the printer's Filament menu. **Do not assume it was
-  PLA** — sending PLA to a nozzle configured as PETG or ASA silently overwrites
-  that, which is worse than the state you were trying to restore.
+- **USB Serial** restores the selected cleaning preset — `M865 S"PLA" L<n>` for
+  PLA or `M865 S"PA" L<n>` for Nylon/PA — as the very last command after the warm
+  dock. The serial session has no end-of-print sequence after that command, so the
+  selected preset is in place for the next load. Cleanup uses the same target if a
+  FLEX write was already acknowledged before a failure.
+- **The downloaded file does not restore it before EOF**, on purpose. The printer's
+  end-of-print sequence runs after the last line; restoring a non-flexible type before
+  then can trigger auto-retract, reheating and ramming the melt zone immediately after
+  the pull. Once the printer has **finished**, send the selected command shown by the
+  page — `M865 S"PLA" L<n>` or `M865 S"PA" L<n>` — or use the Filament menu. A power
+  cycle does not undo the persistent FLEX setting.
 
 One thing FLEX does *not* fix: a retraction already banked in persistent storage.
 While the firmware believes a nozzle is retracted, `planner.cpp` silently swallows
@@ -190,19 +200,17 @@ and the normal print state machine, so this timeout never applies to it.
 ## Keeping the two in sync
 
 `generateGcode()` in `index.html` is a port of `generate_cold_pull_gcode()` in the
-PrusaSlicer fork (`src/slic3r/Utils/MaintenanceSerial.cpp`) and is normally kept
-**byte-identical** to it. If you change the procedure, change it in both places
-and re-check:
+PrusaSlicer fork (`src/slic3r/Utils/MaintenanceSerial.cpp`). The base procedure
+is kept conceptually aligned with that implementation. This page additionally
+has material profiles, attention tones, and selected-preset restoration; those
+page-specific changes need a separate fork update if the slicer implementation
+is also changed.
 
-```bash
-diff <(node -e 'eval(require("fs").readFileSync("index.html","utf8").match(/<script>([\s\S]*?)<\/script>/)[1].match(/function generateGcode[\s\S]*?\n}/)[0]); process.stdout.write(generateGcode(0,290,80))') reference.gcode
-```
-
-The two are in sync again as of
+The base implementations were brought back in sync by
 [hyiger/PrusaSlicer#55](https://github.com/hyiger/PrusaSlicer/pull/55), which
-ports the issue #3 changes and the 6.9.0 auto-retract work back to the fork;
-byte-identity was verified across several `(tool, flush, pull)` combinations.
-The check fails against a `reference.gcode` generated before that lands.
+ports the issue #3 changes and the 6.9.0 auto-retract work back to the fork.
+The page-specific material and notification changes are not byte-identical to
+that older reference and should be ported separately if desired.
 
 ## Status
 
@@ -218,8 +226,9 @@ The changes from
 [issue #3](https://github.com/hyiger/indx-cold-pull/issues/3) — the pre-purge
 briefing prompt, the two-stage warm-up to the pull temperature, the warm wipe,
 and the automatic dock at the end of a serial run — plus the 6.9.0 auto-retract
-workaround and the 80 mm pull are all newer than that hardware run and **have
-not yet been tested on a printer**. Treat a first run as a test.
+workaround and the 100 mm pull are all newer than that hardware run and **have
+not yet been tested on a printer**. The Nylon profile, attention tones, and
+selected-preset restoration are also new changes; treat a first run as a test.
 
 **Use at your own risk.** This drives a hot nozzle and a high-current motor.
 
