@@ -177,7 +177,7 @@
     <tr><td>Flush</td><td>~60 mm of the selected cleaning filament at the flush temperature to displace old material.</td></tr>
     <tr><td>Pack</td><td>Small extrusions while cooling toward the material profile's packing temperature, so the plug casts the nozzle interior.</td></tr>
     <tr><td>Deep cool</td><td>Fan-assisted to the material profile's deep-cool temperature with a fixed dwell, so the plug grips the debris.</td></tr>
-    <tr><td>Pull</td><td>Reheat to the pull temperature in two stages to avoid overshoot, raise motor current, and retract 100 mm hard.</td></tr>
+    <tr><td>Pull</td><td>Reheat to the pull temperature in two stages to avoid overshoot, raise motor current, then retract 40 mm hard and carry the strand out another 80 mm.</td></tr>
     <tr><td>Restore</td><td>Undo every session change: motor current, extrusion guard, stall detection — and, over USB Serial, the filament type.</td></tr>
     <tr><td>Wipe &amp; dock</td><td>Rewarm the nozzle so residue releases instead of dragging cold strings, then dock automatically — no manual parking. The USB-file route also gets the firmware's end-of-print wastebin wipe, warm.</td></tr>
   </table>
@@ -274,7 +274,9 @@ const ATTENTION_BEEP = [
   "M300 S880 P150"
 ];
 const DWELL_BEEP = "M300 S660 P400";
-const PULL_DISTANCE = 100;
+const PULL_YANK_DISTANCE = 40;
+const PULL_CARRY_DISTANCE = 80;
+const PULL_DISTANCE = PULL_YANK_DISTANCE + PULL_CARRY_DISTANCE;
 
 function profileFor(material) {
   return MATERIAL_PROFILES[material] || MATERIAL_PROFILES.pla;
@@ -417,8 +419,8 @@ function generateGcode(tool /* 0-based */, flush, pull, material = "pla") {
   g += `M109 C${pull - 4}\n`;
   g += `M109 S${pull}\n`;
   g += "M906 E650             ; E current up for the stiff plug\n";
-  g += `G1 E-${PULL_DISTANCE / 2} F3000         ; 50mm/s yank\n`;
-  g += `G1 E-${PULL_DISTANCE / 2} F1200         ; feed the strand up out of the gear\n`;
+  g += `G1 E-${PULL_YANK_DISTANCE} F3000         ; 50mm/s breakout yank\n`;
+  g += `G1 E-${PULL_CARRY_DISTANCE} F1200         ; feed the strand up out of the gear\n`;
   g += "M906 E550             ; restore INDX default current\n";
   g += "M591 R                ; restore stuck-filament detection\n";
   g += "M302 S170             ; restore cold-extrusion guard\n";
@@ -819,8 +821,8 @@ function buildSteps(tool, flush, pull, material = "pla") {
   s.push(["Confirming pull temperature", `M109 S${pull}`, HEAT]);
   s.push(["Confirming nozzle is picked", T, PICK]);
   s.push(["Raising extruder motor current", "M906 E650", QUICK]);
-  s.push(["Pulling the plug out", `G1 E-${PULL_DISTANCE / 2} F3000`, MOVE]);
-  s.push(["Feeding the strand up and out", `G1 E-${PULL_DISTANCE / 2} F1200`, MOVE]);
+  s.push(["Pulling the plug out", `G1 E-${PULL_YANK_DISTANCE} F3000`, MOVE]);
+  s.push(["Feeding the strand up and out", `G1 E-${PULL_CARRY_DISTANCE} F1200`, MOVE]);
   s.push(["Restoring motor current", "M906 E550", QUICK]);
   s.push(["Restoring stuck-filament detection", "M591 R", QUICK]);
   s.push(["Restoring cold-extrusion guard", "M302 S170", QUICK]);

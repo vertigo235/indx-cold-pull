@@ -28,7 +28,7 @@ reading further:
 | Item | Why |
 |---|---|
 | **Selected cleaning filament, and stay at the printer** | PLA is the preferred, field-tested material. The Nylon/PA option is experimental: use dry, pure/unfilled PA and follow the spool manufacturer's temperature limits. Do **not** load it beforehand — a prompt on the printer's screen says when to insert it. |
-| **Remove the PTFE tube from this tool** | The pulled plug travels 100 mm up and out of the top port. With the tube fitted there is nowhere for it to go. |
+| **Remove the PTFE tube from this tool** | The pulled plug travels 120 mm up and out of the top port. With the tube fitted there is nowhere for it to go. |
 | **This nozzle's filament type gets set to FLEX temporarily** | Firmware 6.9.0 removed the Auto Retract switch on INDX, and FLEX is the only remaining way to suppress it; see [Auto retract](#auto-retract) below. USB Serial restores the selected cleaning preset at the end: `PLA` for PLA or firmware's `PA` preset for Nylon/PA. A downloaded file leaves FLEX in place through printer finalization; after it reports **Finished**, set the nozzle to the selected preset from the Filament menu or with the command shown in the reminder below. |
 
 Serial mode additionally needs **Settings → Hardware → Experimental Settings →
@@ -37,7 +37,7 @@ below for why.
 
 ## The procedure
 
-Pick tool → mark FLEX → hot flush → pack while cooling → deep cool → 100 mm
+Pick tool → mark FLEX → hot flush → pack while cooling → deep cool → 120 mm
 motorized pull → restore → warm dock. Prompts beep and appear on the **printer's**
 screen, waiting for a knob press, so your hands are at the machine where the work happens.
 
@@ -226,7 +226,7 @@ The changes from
 [issue #3](https://github.com/hyiger/indx-cold-pull/issues/3) — the pre-purge
 briefing prompt, the two-stage warm-up to the pull temperature, the warm wipe,
 and the automatic dock at the end of a serial run — plus the 6.9.0 auto-retract
-workaround and the 100 mm pull are all newer than that hardware run and **have
+workaround and the 120 mm pull are all newer than that hardware run and **have
 not yet been tested on a printer**. The Nylon profile, attention tones, and
 selected-preset restoration are also new changes; treat a first run as a test.
 
