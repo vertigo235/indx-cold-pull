@@ -29,7 +29,7 @@ reading further:
 |---|---|
 | **Selected cleaning filament, and stay at the printer** | PLA is the preferred, field-tested material. The Nylon/PA option is experimental: use dry, pure/unfilled PA and follow the spool manufacturer's temperature limits. Do **not** load it beforehand — a prompt on the printer's screen says when to insert it. |
 | **Remove the PTFE tube from this tool** | The pulled plug travels 120 mm up and out of the top port. With the tube fitted there is nowhere for it to go. |
-| **This nozzle's filament type gets set to FLEX temporarily** | Firmware 6.9.0 removed the Auto Retract switch on INDX, and FLEX is the only remaining way to suppress it; see [Auto retract](#auto-retract) below. USB Serial restores the selected cleaning preset at the end: `PLA` for PLA or firmware's `PA` preset for Nylon/PA. A downloaded file leaves FLEX in place through printer finalization; after it reports **Finished**, set the nozzle to the selected preset from the Filament menu or with the command shown in the reminder below. |
+| **This nozzle's filament type gets set to FLEX temporarily** | Firmware 6.9.0 removed the Auto Retract switch on INDX, and FLEX is the only remaining way to suppress it; see [Auto retract](#auto-retract) below. USB Serial records the selected profile's firmware type at the end: `PLA` for PLA or Cleaning filament, or `PA` for Nylon/PA. A downloaded file leaves FLEX in place through printer finalization; after it reports **Finished**, set the nozzle to that firmware type from the Filament menu or with the command shown in the reminder below. |
 
 Serial mode additionally needs **Settings → Hardware → Experimental Settings →
 "Serial Printing Screen" → OFF** (then reboot). See [the firmware bug](#firmware-bug)
@@ -56,8 +56,8 @@ Success looks like **three thin strands with visible dark debris**. Repeat until
 the tip comes out clean, typically one to three cycles.
 
 **Then put the settings back.** Refit the PTFE tube and make sure the nozzle's
-filament type is no longer FLEX. USB Serial restores the selected cleaning preset
-at the end of a clean run. For a downloaded file, wait until the printer reports
+filament type is no longer FLEX. USB Serial restores the selected profile's
+firmware type at the end of a clean run. For a downloaded file, wait until the printer reports
 **Finished**, then use the command shown by the page or select the preset from the
 Filament menu. A nozzle left marked FLEX will not auto-retract at the end of a print.
 
@@ -67,7 +67,9 @@ a cold pull cannot reach it. Stop there.
 ## Cleaning material profiles
 
 The default PLA profile is the preferred, field-tested path: flush at 290 °C and
-pull at 80 °C. The Nylon/PA profile is an experimental starting point: use dry,
+pull at 80 °C. The Cleaning filament profile uses a 290 °C flush and 85 °C pull.
+Firmware has no Cleaning Filament preset, so that profile records the tool as PLA
+after the run. The Nylon/PA profile is an experimental starting point: use dry,
 pure/unfilled PA, flush at 290 °C (or the spool's specified print temperature),
 and pull at 130 °C. The project uses these as deliberate starting values for this
 automated profile; [Prusa's INDX maintenance guide](https://help.prusa3d.com/article/regular-printer-maintenance-core-one-indx_1116911)
@@ -80,6 +82,11 @@ Validate them on the exact PA grade and nozzle before relying on the automated p
 Nylon is hygroscopic; dry it according to the manufacturer's instructions. Do not
 use carbon-fiber- or glass-filled PA as the first test. The selected Nylon preset is
 called `PA` in firmware, so restoration uses `M865 S"PA" L<n>`.
+
+Generated filenames begin with the selected profile: for example,
+`pla_cold_pull_nozzle1.gcode`, `pa_cold_pull_nozzle1.gcode`, or
+`cleaning_filament_cold_pull_nozzle1.gcode`. This lets all profiles coexist on
+one SD card without replacing one another.
 
 <a name="auto-retract"></a>
 ## Auto retract
@@ -138,8 +145,8 @@ Side effects of the choice, all checked:
 **Putting it back is on you.** The write lands in the printer's persistent settings
 and a power cycle does not undo it.
 
-- **USB Serial** restores the selected cleaning preset — `M865 S"PLA" L<n>` for
-  PLA or `M865 S"PA" L<n>` for Nylon/PA — as the very last command after the warm
+- **USB Serial** restores the selected profile's firmware type — `M865 S"PLA" L<n>`
+  for PLA or Cleaning filament, or `M865 S"PA" L<n>` for Nylon/PA — as the very last command after the warm
   dock. The serial session has no end-of-print sequence after that command, so the
   selected preset is in place for the next load. Cleanup uses the same target if a
   FLEX write was already acknowledged before a failure.
